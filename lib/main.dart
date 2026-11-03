@@ -29,7 +29,10 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => PracticeItemControllerCubit()),
         BlocProvider(create: (context) => UserwrongquestionControllerCubit()),
       ],
-      child: MaterialApp(home: const Loginpage()),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: const Loginpage(),
+      ),
     );
   }
 }
