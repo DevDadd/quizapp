@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:quizapp/practice/controller/cubit/practice_sets_controller.dart';
 import 'package:quizapp/practice/view/PracticePage.dart';
 
 class Homepage extends StatelessWidget {
@@ -20,7 +22,10 @@ class Homepage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Practicepage(),
+                      builder: (context) => BlocProvider(
+                        create: (_) => PracticeSetsControllerCubit(),
+                        child: const Practicepage(),
+                      ),
                     ),
                   );
                 },

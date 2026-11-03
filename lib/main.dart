@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quizapp/authentication/controller/user_controller.dart';
 import 'package:quizapp/authentication/view/pages/LoginPage.dart';
 import 'package:quizapp/di.dart';
+import 'package:quizapp/practice/controller/cubit/practice_sets_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,8 +16,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => UserControllerCubit(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => UserControllerCubit()),
+        BlocProvider(create: (context) => PracticeSetsControllerCubit()),
+      ],
       child: MaterialApp(home: const Loginpage()),
     );
   }
