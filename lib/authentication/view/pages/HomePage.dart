@@ -40,10 +40,9 @@ class Homepage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Trang chủ Quiz Mobile')),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -65,6 +64,20 @@ class Homepage extends StatelessWidget {
                   ),
                   child: const Center(
                     child: Text("Luyện tập", style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                height: 50,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 1),
+                ),
+                child: const Center(
+                  child: Text(
+                    "Danh sách người chơi",
+                    style: TextStyle(fontSize: 18),
                   ),
                 ),
               ),
