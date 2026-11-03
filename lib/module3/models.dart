@@ -97,8 +97,8 @@ class Match {
   });
 }
 
-/// Pure match rule copied in meaning from matches/services.py:calculate_result.
-/// More correct answers alone DO NOT win unless all questions are correct.
+/// M03 rule (Scenario 3 step 7, Exception 7):
+/// more correct answers wins; same count -> faster wins; same count and time -> draw.
 String resolveMatchOutcome({
   required int questionCount,
   required int playerCorrect,
@@ -106,14 +106,9 @@ String resolveMatchOutcome({
   required int playerSeconds,
   required int botSeconds,
 }) {
-  final perfectPlayer = playerCorrect == questionCount;
-  final perfectBot = botCorrect == questionCount;
-  if (perfectPlayer && perfectBot) {
-    if (playerSeconds < botSeconds) return 'win';
-    if (playerSeconds > botSeconds) return 'lose';
-    return 'draw';
-  }
-  if (perfectPlayer) return 'win';
-  if (perfectBot) return 'lose';
+  if (playerCorrect > botCorrect) return 'win';
+  if (playerCorrect < botCorrect) return 'lose';
+  if (playerSeconds < botSeconds) return 'win';
+  if (playerSeconds > botSeconds) return 'lose';
   return 'draw';
 }

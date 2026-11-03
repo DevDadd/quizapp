@@ -38,7 +38,7 @@ API: `/leaderboard/leaderboard/?limit=50&offset=0`, `/leaderboard/users/{id}/sta
 
 Câu hỏi có sẵn: `assets/questions_seed.json`, 36 câu **demo** (không phải ngân hàng thật của nhóm). Dùng `sqflite` tạo 6 bảng local `questions`, `question_options`, `matches`, `match_questions`, `match_participants`, `match_answers`. Không gửi trận BOT lên Django và **không đổi điểm BXH online**.
 
-BOT trả lời đúng mỗi câu với xác suất easy **55%**, medium **75%**, hard **92%**. Luật trong source: một bên thắng nếu đúng **10/10** mà bên kia không đúng 10/10; nếu cả hai 10/10 thì nhanh hơn thắng; nếu cả hai đều không hoàn hảo thì hòa, kể cả 8/10 so với 6/10. Điểm thắng 1, hòa 0.5, thua 0.
+BOT trả lời đúng mỗi câu với xác suất easy **55%**, medium **75%**, hard **92%**. Luật: bên đúng **nhiều câu hơn** thắng (kể cả 1/10 so với 0/10); bằng số câu đúng thì bên nhanh hơn thắng; bằng cả số câu và thời gian thì hòa. Điểm thắng 1, hòa 0.5, thua 0.
 
 ## Điểm tích hợp đã sửa
 
