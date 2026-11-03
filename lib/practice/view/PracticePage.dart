@@ -82,7 +82,7 @@ class _PracticepageState extends State<Practicepage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => Practicesessionpage(
+                                builder: (_) => Practicesessionpage(
                                   practiceSet: practiceSet,
                                 ),
                               ),
@@ -101,10 +101,7 @@ class _PracticepageState extends State<Practicepage> {
 }
 
 class _PracticeSetsTable extends StatelessWidget {
-  const _PracticeSetsTable({
-    required this.sets,
-    required this.onTap,
-  });
+  const _PracticeSetsTable({required this.sets, required this.onTap});
 
   final List<PracticeSet> sets;
   final Function(PracticeSet) onTap;
@@ -160,11 +157,7 @@ class _PracticeSetsTable extends StatelessWidget {
     );
   }
 
-  Widget _buildCell(
-    String text,
-    TextStyle style,
-    PracticeSet set,
-  ) {
+  Widget _buildCell(String text, TextStyle style, PracticeSet set) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => onTap(set),
