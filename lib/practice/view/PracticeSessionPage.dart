@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quizapp/authentication/controller/user_controller.dart';
@@ -24,10 +26,46 @@ class Practicesessionpage extends StatefulWidget {
 }
 
 class _PracticesessionpageState extends State<Practicesessionpage> {
+  late int _remainingSeconds;
+  Timer? _countdownTimer;
+  bool _isFinishing = false;
+
   @override
   void initState() {
     super.initState();
+    _remainingSeconds = widget.practiceSet.timeLimitSeconds;
     _startSessionAndLoadQuestions();
+  }
+
+  void _startCountdown() {
+    if (_remainingSeconds <= 0) return;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds <= 1) {
+        timer.cancel();
+        _countdownTimer = null;
+        setState(() => _remainingSeconds = 0);
+        _submitOnTimeExpired();
+        return;
+      }
+      setState(() => _remainingSeconds--);
+    });
+  }
+
+  Future<void> _submitOnTimeExpired() async {
+    if (!mounted || _isFinishing) return;
+    await _submitAndGrade(context.read<PracticeSetsControllerCubit>().state);
+  }
+
+  String get _formattedTime {
+    final minutes = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _startSessionAndLoadQuestions() async {
@@ -48,6 +86,11 @@ class _PracticesessionpageState extends State<Practicesessionpage> {
       }
     }
     await _loadQuestionsAndOptions();
+    if (mounted &&
+        context.read<PracticeSessionControllerCubit>().state.practiceSession !=
+            null) {
+      _startCountdown();
+    }
   }
 
   Future<void> _loadQuestionsAndOptions() async {
@@ -67,13 +110,20 @@ class _PracticesessionpageState extends State<Practicesessionpage> {
   Future<void> _submitAndGrade(
     PracticeSetsControllerState practiceState,
   ) async {
+    if (_isFinishing || !mounted) return;
+    _isFinishing = true;
     final sessionCubit = context.read<PracticeSessionControllerCubit>();
     final didSubmit = await sessionCubit.submit(
       questions: practiceState.questions,
       selectedOptionIds: practiceState.selectedOptionIds,
       responseTimeMs: practiceState.responseTimeMs,
     );
-    if (!didSubmit || !mounted) return;
+    if (!didSubmit || !mounted) {
+      _isFinishing = false;
+      return;
+    }
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
 
     final practiceId = sessionCubit.state.practiceSession?.practiceId;
     if (practiceId != null) {
@@ -95,13 +145,34 @@ class _PracticesessionpageState extends State<Practicesessionpage> {
           }
         }
       }
+    } else {
+      _isFinishing = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.practiceSet.title)),
+      appBar: AppBar(
+        title: Text(widget.practiceSet.title),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Text(
+                _formattedTime,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: _remainingSeconds <= 60
+                      ? Theme.of(context).colorScheme.error
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body:
           BlocBuilder<PracticeSetsControllerCubit, PracticeSetsControllerState>(
             builder: (context, practiceState) {
