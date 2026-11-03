@@ -1,3 +1,4 @@
+import 'package:quizapp/app_config.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +15,7 @@ class UserControllerCubit extends Cubit<UserControllerState> {
 
   Future<void> login() async {
     final response = await _dio.post<Map<String, dynamic>>(
-      'https://quiz-mobile-backend.onrender.com/auth/login/',
+      '${AppConfig.apiBaseUrl}/auth/login/',
       data: {
         'username': usernameController.text,
         'password': passwordController.text,
