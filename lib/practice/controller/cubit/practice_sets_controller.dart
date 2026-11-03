@@ -11,7 +11,7 @@ class PracticeSetsControllerCubit extends Cubit<PracticeSetsControllerState> {
   final Dio _dio = getIt<Dio>();
   final Map<int, DateTime> _questionStartedAt = {};
 
-  Future<void> getPracticeSets(String difficulty) async {
+  Future<List<PracticeSet>> getPracticeSets(String difficulty) async {
     final response = await _dio.get(
       'https://quiz-mobile-backend.onrender.com/practice/sets',
     );
@@ -30,9 +30,11 @@ class PracticeSetsControllerCubit extends Cubit<PracticeSetsControllerState> {
         : sets.where((set) => set.difficulty == difficultyValue).toList();
 
     emit(state.copyWith(practiceSets: filteredSets));
+    return filteredSets;
   }
 
-  Future<void> getQuestions(String setId) async {
+  Future<List<Question>> getQuestions(String setId) async {
+    var questions = <Question>[];
     emit(
       state.copyWith(
         questions: const [],
@@ -58,7 +60,7 @@ class PracticeSetsControllerCubit extends Cubit<PracticeSetsControllerState> {
         throw const FormatException('Questions response must contain a list.');
       }
 
-      final questions = data
+      questions = data
           .map(
             (json) => Question.fromJson(Map<String, dynamic>.from(json as Map)),
           )
@@ -82,6 +84,7 @@ class PracticeSetsControllerCubit extends Cubit<PracticeSetsControllerState> {
         state.copyWith(isLoading: false, errorMessage: _errorMessage(error)),
       );
     }
+    return questions;
   }
 
   void selectOption({required int questionId, required int optionId}) {
@@ -91,6 +94,19 @@ class PracticeSetsControllerCubit extends Cubit<PracticeSetsControllerState> {
       ..[questionId] = DateTime.now()
           .difference(_questionStartedAt[questionId] ?? DateTime.now())
           .inMilliseconds;
+    emit(
+      state.copyWith(
+        selectedOptionIds: selected,
+        responseTimeMs: responseTimes,
+      ),
+    );
+  }
+
+  void clearOptionSelection(int questionId) {
+    final selected = Map<int, int>.from(state.selectedOptionIds)
+      ..remove(questionId);
+    final responseTimes = Map<int, int>.from(state.responseTimeMs)
+      ..remove(questionId);
     emit(
       state.copyWith(
         selectedOptionIds: selected,

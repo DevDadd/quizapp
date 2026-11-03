@@ -51,7 +51,7 @@ class PracticeSessionControllerCubit
     );
   }
 
-  Future<bool> submit({
+  Future<void> submit({
     required List<Question> questions,
     required Map<int, int> selectedOptionIds,
     required Map<int, int> responseTimeMs,
@@ -64,7 +64,7 @@ class PracticeSessionControllerCubit
           clearSubmissionResult: true,
         ),
       );
-      return false;
+      return;
     }
 
     final answers = questions
@@ -115,8 +115,6 @@ class PracticeSessionControllerCubit
           clearError: true,
         ),
       );
-
-      return true;
     } catch (error) {
       emit(
         state.copyWith(
@@ -126,7 +124,6 @@ class PracticeSessionControllerCubit
               : error.toString(),
         ),
       );
-      return false;
     }
   }
 

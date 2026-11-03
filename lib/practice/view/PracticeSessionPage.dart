@@ -113,12 +113,12 @@ class _PracticesessionpageState extends State<Practicesessionpage> {
     if (_isFinishing || !mounted) return;
     _isFinishing = true;
     final sessionCubit = context.read<PracticeSessionControllerCubit>();
-    final didSubmit = await sessionCubit.submit(
+    await sessionCubit.submit(
       questions: practiceState.questions,
       selectedOptionIds: practiceState.selectedOptionIds,
       responseTimeMs: practiceState.responseTimeMs,
     );
-    if (!didSubmit || !mounted) {
+    if (sessionCubit.state.errorMessage != null || !mounted) {
       _isFinishing = false;
       return;
     }
@@ -246,6 +246,15 @@ class _PracticesessionpageState extends State<Practicesessionpage> {
                                 optionId: option.optionId,
                               );
                         },
+                        onOptionDoubleTapped: (option) {
+                          if (practiceState.selectedOptionIds[question
+                                  .questionId] ==
+                              option.optionId) {
+                            context
+                                .read<PracticeSetsControllerCubit>()
+                                .clearOptionSelection(question.questionId);
+                          }
+                        },
                       );
                     },
                   );
@@ -342,6 +351,7 @@ class _QuestionCard extends StatelessWidget {
     required this.selectedOptionId,
     required this.onRetryOptions,
     required this.onOptionSelected,
+    required this.onOptionDoubleTapped,
   });
 
   final Question question;
@@ -351,6 +361,7 @@ class _QuestionCard extends StatelessWidget {
   final int? selectedOptionId;
   final VoidCallback onRetryOptions;
   final ValueChanged<QuestionOption> onOptionSelected;
+  final ValueChanged<QuestionOption> onOptionDoubleTapped;
 
   @override
   Widget build(BuildContext context) {
@@ -396,6 +407,7 @@ class _QuestionCard extends StatelessWidget {
                   return InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () => onOptionSelected(option),
+                    onDoubleTap: () => onOptionDoubleTapped(option),
                     child: Container(
                       alignment: Alignment.center,
                       padding: const EdgeInsets.all(12),

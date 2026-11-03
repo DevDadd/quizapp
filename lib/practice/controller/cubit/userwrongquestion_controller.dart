@@ -11,7 +11,7 @@ class UserwrongquestionControllerCubit
 
   final Dio _dio = getIt<Dio>();
 
-  Future<bool> recordWrong(String practiceId) async {
+  Future<void> recordWrong(String practiceId) async {
     emit(state.copyWith(isRecording: true, clearError: true));
     final url =
         'https://quiz-mobile-backend.onrender.com/practice/sessions/$practiceId/record-wrong/';
@@ -32,7 +32,6 @@ class UserwrongquestionControllerCubit
       }
 
       emit(state.copyWith(recorded: recorded, isRecording: false));
-      return recorded;
     } catch (error) {
       emit(
         state.copyWith(
@@ -42,7 +41,6 @@ class UserwrongquestionControllerCubit
               : error.toString(),
         ),
       );
-      return false;
     }
   }
 }

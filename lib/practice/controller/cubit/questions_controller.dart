@@ -11,8 +11,12 @@ class QuestionsControllerCubit extends Cubit<QuestionsControllerState> {
 
   final Dio _dio = getIt<Dio>();
 
-  Future<void> getOptions(String questionId) async {
-    final id = int.parse(questionId);
+  Future<List<QuestionOption>> getOptions(String questionId) async {
+    final id = int.tryParse(questionId);
+    if (id == null) {
+      throw FormatException('Invalid question id: $questionId');
+    }
+
     emit(
       state.copyWith(
         loadingQuestionIds: {...state.loadingQuestionIds, id},
@@ -55,6 +59,7 @@ class QuestionsControllerCubit extends Cubit<QuestionsControllerState> {
           clearQuestionErrorId: id,
         ),
       );
+      return fetchedOptions;
     } catch (error) {
       final loadingQuestionIds = {...state.loadingQuestionIds}..remove(id);
       final errors = Map<int, String>.from(state.questionErrors)
@@ -65,6 +70,7 @@ class QuestionsControllerCubit extends Cubit<QuestionsControllerState> {
           questionErrors: errors,
         ),
       );
+      return const [];
     }
   }
 
