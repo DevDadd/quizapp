@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: Homepage()));
     expect(find.text('Luyện tập'), findsOneWidget);
     expect(find.text('Danh sách người chơi'), findsOneWidget);
-    expect(find.text('M02 - Bảng xếp hạng'), findsOneWidget);
-    expect(find.text('M03 - Thi đấu với máy'), findsOneWidget);
+    expect(find.text('Bảng xếp hạng'), findsOneWidget);
+    expect(find.text('Thi đấu với máy'), findsOneWidget);
   });
 }

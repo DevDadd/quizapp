@@ -91,7 +91,7 @@ class Homepage extends StatelessWidget {
                     border: Border.all(color: Colors.black, width: 1),
                   ),
                   child: const Center(
-                    child: Text("M02 - Bảng xếp hạng", style: TextStyle(fontSize: 18)),
+                    child: Text("Bảng xếp hạng", style: TextStyle(fontSize: 18)),
                   ),
                 ),
               ),
@@ -105,7 +105,7 @@ class Homepage extends StatelessWidget {
                     border: Border.all(color: Colors.black, width: 1),
                   ),
                   child: const Center(
-                    child: Text("M03 - Thi đấu với máy", style: TextStyle(fontSize: 18)),
+                    child: Text("Thi đấu với máy", style: TextStyle(fontSize: 18)),
                   ),
                 ),
               ),
