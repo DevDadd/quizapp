@@ -1,0 +1,93 @@
+PROMPT KHÔI PHỤC / ĐỒNG BỘ TÍNH NĂNG PRACTICE VỚI PROJECT HIỆN TẠI
+
+Hãy làm việc trực tiếp trên Flutter project hiện tại. Mục tiêu là giữ hoặc đưa tính năng Practice về đúng hành vi và giao diện được mô tả dưới đây. Trước khi sửa, hãy đọc các file hiện có và đối chiếu code. Không tạo lại những class/file đã có, không đổi endpoint hoặc schema backend, không tự thêm màn hình, hành vi hay thiết kế ngoài mô tả này. Ưu tiên sửa ít nhất có thể để khớp trạng thái mục tiêu.
+
+FILE VÀ PHÂN CHIA TRÁCH NHIỆM
+
+- `lib/main.dart`: đăng ký các Cubit ở root `MultiBlocProvider`: `UserControllerCubit`, `PracticeSetsControllerCubit`, `QuestionsControllerCubit`, `PracticeSessionControllerCubit`, `PracticeItemControllerCubit`, `UserwrongquestionControllerCubit`. Các route dùng chung provider từ root.
+- `lib/practice/controller/cubit/practice_sets_controller.dart` và state tương ứng: tải practice sets, tải questions, giữ lựa chọn `questionId -> optionId`, response time theo questionId, loading/error của questions.
+- `lib/practice/controller/cubit/questions_controller.dart` và state tương ứng: chỉ tải options theo questionId, giữ options và trạng thái loading/error theo từng câu.
+- `lib/practice/controller/cubit/practice_session_controller.dart` và state tương ứng: start session, submit, calculate result; giữ session và result.
+- `lib/practice/controller/cubit/practice_item_controller.dart` và state tương ứng: gọi grade session.
+- `lib/practice/controller/cubit/userwrongquestion_controller.dart` và state tương ứng: gọi record wrong; hàm `recordWrong` trả `Future<void>`.
+- Model hiện có: `PracticeSet`, `Question`, `QuestionOption`, `PracticeSession`, `PracticeResult` và `PracticeResultAnswer`. Tái sử dụng chúng.
+
+API VÀ KIỂU TRẢ VỀ
+
+1. `GET /practice/sets`
+   - `PracticeSetsControllerCubit.getPracticeSets(String difficulty)` trả `Future<List<PracticeSet>>`, emit danh sách đã lọc.
+   - difficulty `dễ` = 1, `trung bình` = 2, `khó` = 3. `all`, `tất cả`, rỗng hoặc không parse được thì lấy toàn bộ.
+
+2. `GET /practice/sets/{set_id}/questions/`
+   - `PracticeSetsControllerCubit.getQuestions(String setId)` trả `Future<List<Question>>`, emit questions, reset các lựa chọn cũ và response time khi bắt đầu tải.
+   - Response hỗ trợ list trực tiếp hoặc object có `data` là list.
+   - Khi lỗi, cập nhật error/loading trong state và trả list rỗng.
+
+3. `GET /practice/questions/{question_id}/options/`
+   - `QuestionsControllerCubit.getOptions(String questionId)` trả `Future<List<QuestionOption>>`.
+   - Response options gồm `option_id`, `content`, `order_index`, có thể có `is_correct`; nếu thiếu `question_id`, gắn ID lấy từ request.
+   - Cập nhật state options theo questionId, không để requests song song ghi đè options của nhau. Khi lỗi, cập nhật error của đúng question và trả list rỗng.
+
+4. `POST /practice/sessions/`
+   - Body `{ "user_id": <int>, "mode": "SET", "set_id": <int> }`.
+   - Đọc `practice_id` từ response và emit `PracticeSession`.
+
+5. `POST /practice/sessions/{practice_id}/submit/`
+   - Body `{ "answers": [{ "order_index": <int>, "selected_option_id": <int>, "response_time_ms": <int> }] }`.
+   - Submit là `Future<void>`; kết quả/lỗi cập nhật vào session state.
+   - Log method, URL và JSON body của request.
+
+6. `POST /practice/sessions/{practice_id}/grade/`
+   - Không body; response mẫu là boolean `true`.
+   - Implement trong `PracticeItemControllerCubit.grade(String practiceId)`.
+
+7. `GET /practice/sessions/{practice_id}/result/`
+   - Implement trong `PracticeSessionControllerCubit.calculateResult(String practiceId)`.
+   - Parse object vào `PracticeResult` và emit vào `PracticeSessionControllerState.result`.
+   - Response gồm `total_questions`, `answered_count`, `correct_count`, `wrong_count`, `skipped_count`, `total_response_time_ms`, `status`, `mode`, `answers`.
+   - Mỗi phần tử `answers`: `order_index`, `question_id`, `content`, `selected_option_id`, `correct_option_id`, `is_correct`.
+
+8. `POST /practice/sessions/{practice_id}/record-wrong/`
+   - Không body; response mẫu là boolean `true`.
+   - Chạy hàm `recordWrong(String practiceId)` trong `UserwrongquestionControllerCubit` sau calculateResult. Hàm trả `Future<void>` và ghi lỗi/kết quả qua state.
+
+TRANG CHỌN BỘ ĐỀ: `PracticePage.dart`
+
+- Giữ UI hiện có: các nút lọc “Tất cả”, “Dễ”, “Khó”; bảng “Tên đề”, “Độ khó”, “Mô tả”.
+- Hiển thị các practice sets từ `state.practiceSets`. Nhãn độ khó 1/2/3 là Dễ/Trung bình/Khó.
+- Nhấn một ô của bộ đề sẽ mở `PracticeSessionPage.dart` và truyền PracticeSet.
+
+TRANG LÀM BÀI: `PracticeSessionPage.dart`
+
+- Tạo session bằng userId hiện tại, mode `SET` và setId; sau đó tải questions và options.
+- Đồng hồ `mm:ss` hiển thị trên AppBar, lấy giới hạn từ `practiceSet.timeLimitSeconds`. Bắt đầu đếm sau khi session/questions/options đã được tải; màu cảnh báo khi còn tối đa 60 giây; dừng ở `00:00`; hủy Timer khi dispose.
+- Khi hết giờ, tự gọi cùng flow như nút Nộp bài: submit → grade → calculateResult → recordWrong → điều hướng đến `Resultpage`. Chặn submit lặp khi người dùng bấm nút gần thời điểm timeout.
+- Hiển thị tất cả questions trong một `ListView.builder`; options của mỗi câu nằm trong `GridView.count` hai cột bên trong card.
+- Một question chỉ giữ một selected option. Lựa chọn lưu ở PracticeSets state theo questionId; option đã chọn có nền/viền nổi bật.
+- Nhấn lần nữa theo double-tap vào option đang chọn sẽ bỏ chọn option và xóa response time cho question đó. Không ảnh hưởng lựa chọn của câu khác.
+- Response time mỗi câu được tính bằng ms từ khi questions được tải đến khi chọn option.
+- Options có trạng thái đang tải riêng theo câu, lỗi có thể retry riêng. Questions có loading/error/retry và trạng thái rỗng.
+- Nút Nộp bài bật khi có questions, có ít nhất một lựa chọn và đã tạo session. Hiển thị spinner trong khi submit, grade hoặc calculate result. Không hiện dòng `Trạng thái: finished`.
+
+FLOW SAU KHI NỘP
+
+- Submit tạo `answers` chỉ từ các câu đã chọn, dùng orderIndex từ Question; selectedOptionId và responseTimeMs được tra theo questionId.
+- Chỉ khi submit thành công mới gọi grade. Chỉ khi grade trả true mới gọi calculateResult. Chỉ khi calculateResult trả kết quả mới gọi recordWrong, rồi dùng `Navigator.pushReplacement` để mở class `Resultpage` trong file `lib/practice/view/ResultPage.dart`.
+- Không tạo file `PracticeResultPage.dart` hoặc trang kết quả khác.
+
+TRANG KẾT QUẢ: `ResultPage.dart`
+
+- Dùng nền tối và AppBar tiêu đề giữa “Kết quả”, theo giao diện ảnh tham khảo.
+- Dùng `PracticeSessionControllerState.result.answers` từ result API làm nguồn dữ liệu rows; không dựng rows từ danh sách câu hỏi local.
+- Bảng có bốn cột: “Câu hỏi”, “Bạn chọn”, “Đáp án đúng”, “Kết quả”. Sắp xếp theo `order_index`.
+- `content` hiển thị câu hỏi. Tra `selected_option_id` và `correct_option_id` theo questionId trong Questions state để hiển thị nhãn A/B/C/D dựa trên `order_index` của option và nội dung option. Nếu không tìm thấy option nhưng có ID, hiển thị “Đáp án {id}”; nếu ID null hiển thị “—”.
+- Cột kết quả dựa trên `is_correct`: “Đúng” hoặc “Sai”; nếu selectedOptionId null hiển thị “Chưa trả lời”. Có trạng thái loading, lỗi và không có dữ liệu.
+
+QUY TẮC LÀM VIỆC
+
+- Giữ null safety, state Equatable/copyWith và quy ước hiện có.
+- Không đổi API endpoints hoặc JSON keys.
+- Không tạo file UI mới nếu file đích đã có.
+- Không thêm chức năng nộp/chấm/lưu ngoài flow đã mô tả.
+- Chạy `dart format` cho file sửa. Chỉ chạy `flutter analyze` hoặc tests khi người dùng yêu cầu kiểm tra; báo chính xác kết quả.
+- Sau khi hoàn tất, nêu ngắn gọn file sửa và hành vi đã được đồng bộ.

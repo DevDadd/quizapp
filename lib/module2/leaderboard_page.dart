@@ -113,10 +113,6 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         Padding(
           padding: const EdgeInsets.all(8),
           child: Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.center, children: [
-            FilledButton(
-              onPressed: loading || selectedId == null ? null : () => selectPlayer(selectedId!),
-              child: const Text('Chọn người chơi'),
-            ),
             FilledButton(onPressed: loading ? null : load, child: const Text('Tải lại')),
             OutlinedButton(
               onPressed: loading || inOffset == 0
